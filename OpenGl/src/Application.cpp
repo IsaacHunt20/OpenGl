@@ -7,6 +7,32 @@
 #include<string>
 #include<sstream>
 
+//Macro to define our assertion
+#define ASSERT(x) if ((!x)) __debugbreak();
+#define GLCall(x) GLCLearError();\
+    x;\
+    ASSERT(GLLogCall())
+
+
+static void GLCLearError()
+{
+    //loop to run until all errors are cleared
+    while (glGetError() != GL_NO_ERROR);
+    //runs until number of errors is zero
+}
+
+static bool GLLogCall() 
+{
+    //While there is errors write them out 
+    while (GLenum error = glGetError()) 
+    {
+        std::cout<< "[OpenGL Error] (" << error << ")" << std::endl;
+        return false;
+    }
+    return true;
+}
+
+
 struct ShaderProgramSource 
 {
     std::string VertexSource;
@@ -132,21 +158,36 @@ int main(void)
         return 1;
     }
 
-    float positions[6] = {
-       -0.5f, -0.5f,
-        0.5f, -0.5f,
-        0.0f,  0.5f
+    float positions[] = {
+       -0.5f, -0.5f, //0
+        0.5f, -0.5f, //1
+        0.5f,  0.5f, //2
+       -0.5f,  0.5f  //3
+    };
+    
+    //Index Buffer- Dont want to redraw points 
+    unsigned int indicies[] = {
+        0, 1, 2,
+        2, 3, 0
     };
 
     unsigned int buffer;
     glGenBuffers(1, &buffer);
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6, positions, GL_STATIC_DRAW);
+    //Vertex Buufer is based on size of positions
+    glBufferData(GL_ARRAY_BUFFER, 2 * 6 * sizeof(float), positions, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0);
+    
+    unsigned int ibo; //IndexBufferObject
+    glGenBuffers(1, &ibo);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+    //Index Buufer is based on size of indicies no signed type
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6 * sizeof(unsigned int), indicies, GL_STATIC_DRAW);
 
-    //relative file name 
+
+    //relative filepath name 
     ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 
     unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
@@ -154,14 +195,16 @@ int main(void)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
+        //Type-num of verticies - type of data in inidcies - bound ibo above so pass in nullptr
+        GLCall(glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr));
+        
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
