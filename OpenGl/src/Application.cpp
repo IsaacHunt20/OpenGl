@@ -9,6 +9,7 @@
 #include "Render.h"
 #include "IndexBuffer.h"
 #include "VertexBuffer.h"
+#include "VertexArray.h"
 
 struct ShaderProgramSource 
 {
@@ -174,10 +175,12 @@ int main(void)
         GLCall(glGenVertexArrays(1, &vao));
         GLCall(glBindVertexArray(vao));
 
+        VertexArray va;
         VertexBuffer vb(positions, 2 * 4 * sizeof(float));
 
-        GLCall(glEnableVertexAttribArray(0));
-        GLCall(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), 0));
+        VertexBufferLayout layout;
+        layout.AddFloat(2);
+        va.AddBuffer(vb, layout);
 
         IndexBuffer ib(indicies, 6);
 
@@ -193,13 +196,11 @@ int main(void)
         ASSERT(location != -1);
         GLCall(glUniform4f(location, 0.8f, 0.3f, 0.7f, 1.0f));
 
-
-
         //UnBind Vertex & INdex Buffer
         GLCall(glBindVertexArray(0));
         GLCall(glUseProgram(0));
-        GLCall(glBindBuffer(GL_ARRAY_BUFFER, 0));
-        GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+        vb.UnBind();
+        ib.UnBind();
 
         float r = 0.0f;
         float increment = 0.05f;
@@ -214,7 +215,7 @@ int main(void)
             // uniforms must be per draw
             GLCall(glUniform4f(location, r, 0.3f, 0.8f, 1.0f));
 
-            GLCall(glBindVertexArray(vao));
+            va.Bind();
             ib.Bind();
 
             //Type-num of verticies - type of data in inidcies - bound ibo above so pass in nullptr
