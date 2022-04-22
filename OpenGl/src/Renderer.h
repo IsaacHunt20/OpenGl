@@ -1,7 +1,9 @@
 #pragma once
 #include<GL/glew.h>
-//Error Checking for all GL functions this is wrapped by should throough breakpoint but it isn't TODO thing
-//For now will just return function file line 
+#include "VertexArray.h"
+#include "IndexBuffer.h"
+#include "Shader.h"
+ 
 #define ASSERT(x) if (!(x)) __debugbreak();
 
 #define GLCall(x) GLCLearError();\
@@ -11,3 +13,10 @@
 
 void GLCLearError();
 bool GLLogCall(const char* function, const char* file, int line);
+
+class Renderer
+{
+public:
+    void Clear() const;
+    void Draw(const VertexArray& va, const IndexBuffer& ib, const Shader& shader) const;
+};
