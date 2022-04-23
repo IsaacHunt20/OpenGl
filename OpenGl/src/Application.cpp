@@ -1,10 +1,7 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include<fstream>
-#include<iostream>
-#include<string>
-#include<sstream>
+#include <iostream>
 
 #include "Renderer.h"
 #include "IndexBuffer.h"
@@ -12,6 +9,8 @@
 #include "VertexBuffer.h"
 #include "VertexArray.h"
 #include "Shader.h"
+#include "texture.h"
+
 
 int main(void)
 {
@@ -61,10 +60,10 @@ int main(void)
         glfwSwapInterval(1);
 
         float positions[] = {
-           -0.5f, -0.5f, //0
-            0.5f, -0.5f, //1
-            0.5f,  0.5f, //2
-           -0.5f,  0.5f  //3
+           -0.5f, -0.5f, 0.0f, 0.0f, //0
+            0.5f, -0.5f, 1.0f, 0.0f, //1
+            0.5f,  0.5f, 1.0f, 1.0f, //2
+           -0.5f,  0.5f, 0.0f, 1.0f//3
         };
 
         //Index Buffer- Dont want to redraw points 
@@ -73,11 +72,15 @@ int main(void)
             2, 3, 0
         };
 
+        GLCall(glEnable(GL_BLEND));
+        GLCall(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+
         //Vertex Array Object
         VertexArray va;
-        VertexBuffer vb(positions, 2 * 4 * sizeof(float));
+        VertexBuffer vb(positions, 4 * 4 * sizeof(float));
 
         VertexBufferLayout layout;
+        layout.AddFloat(2);
         layout.AddFloat(2);
         va.AddBuffer(vb, layout);
 
@@ -85,6 +88,10 @@ int main(void)
 
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
+
+        Texture texture("res/Textures/ComicBoom.png");
+        texture.Bind();
+        shader.SetUniform1i("u_Texture", 0);
 
         //UnBind Vertex & INdex Buffer
         va.UnBind();
