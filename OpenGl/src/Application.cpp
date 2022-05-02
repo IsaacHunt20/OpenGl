@@ -1,6 +1,9 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include"glm/glm.hpp"
+#include"glm/gtc/matrix_transform.hpp"
+
 #include <iostream>
 
 #include "Renderer.h"
@@ -63,7 +66,7 @@ int main(void)
            -0.5f, -0.5f, 0.0f, 0.0f, //0
             0.5f, -0.5f, 1.0f, 0.0f, //1
             0.5f,  0.5f, 1.0f, 1.0f, //2
-           -0.5f,  0.5f, 0.0f, 1.0f//3
+           -0.5f,  0.5f, 0.0f, 1.0f  //3
         };
 
         //Index Buffer- Dont want to redraw points 
@@ -86,14 +89,18 @@ int main(void)
 
         IndexBuffer ib(indicies, 6);
 
+        glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f);
+
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
+        shader.SetUnifrom4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
+        shader.SetUniformMat4f("u_MVP", proj);
 
         Texture texture("res/Textures/ComicBoom.png");
         texture.Bind();
         shader.SetUniform1i("u_Texture", 0);
 
-        //UnBind Vertex & INdex Buffer
+        //UnBind Vertex & Index Buffer
         va.UnBind();
         shader.UnBind();
         vb.UnBind();
