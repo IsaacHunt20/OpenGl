@@ -31,7 +31,7 @@ int main(void)
 
 
     /* Create a windowed mode window and its OpenGL context */
-    GLFWwindow* window = glfwCreateWindow(1024, 768, "PRACTICE", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(960, 540, "PRACTICE", NULL, NULL);
     if (window == NULL) 
     {
         std::cout << "Failed to create window" << std::endl;
@@ -63,10 +63,10 @@ int main(void)
         glfwSwapInterval(1);
 
         float positions[] = {
-           -0.5f, -0.5f, 0.0f, 0.0f, //0
-            0.5f, -0.5f, 1.0f, 0.0f, //1
-            0.5f,  0.5f, 1.0f, 1.0f, //2
-           -0.5f,  0.5f, 0.0f, 1.0f  //3
+            100.0f, 100.0f, 0.0f, 0.0f, //0
+            200.0f, 100.0f, 1.0f, 0.0f, //1
+            200.0f, 200.0f, 1.0f, 1.0f, //2
+            100.0f, 200.0f, 0.0f, 1.0f  //3
         };
 
         //Index Buffer- Dont want to redraw points 
@@ -89,12 +89,17 @@ int main(void)
 
         IndexBuffer ib(indicies, 6);
 
-        glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f);
+        //Create a 4:3 aspect ratio matrix
+        glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);
+        glm::mat4 view = glm::translate(glm::mat4(1.0f) , glm::vec3(-100, 0, 0));
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(200, 200, 0));
+
+        glm::mat4 mvp = proj * view * model;
 
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
         shader.SetUnifrom4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-        shader.SetUniformMat4f("u_MVP", proj);
+        shader.SetUniformMat4f("u_MVP", mvp);
 
         Texture texture("res/Textures/ComicBoom.png");
         texture.Bind();
