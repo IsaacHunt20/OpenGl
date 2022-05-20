@@ -24,7 +24,7 @@ int main(void)
     if (!glfwInit())
     {
         std::cout << "Failed to Initialize lib." << std::endl;
-        return -1;
+        return 1;
     }
 
     glfwWindowHint(GLFW_SAMPLES, 4);
@@ -39,7 +39,7 @@ int main(void)
     {
         std::cout << "Failed to create window" << std::endl;
         glfwTerminate();
-        return -1;
+        return 1;
     }
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
@@ -61,15 +61,16 @@ int main(void)
         std::cout << "glewInit failed: " << glewGetErrorString(err) << std::endl;
         return 1;
     }
+
     //Scope to terminate program when screen is exited 
     {
         glfwSwapInterval(1);
 
         float positions[] = {
-            100.0f, 100.0f, 0.0f, 0.0f, //0
-            200.0f, 100.0f, 1.0f, 0.0f, //1
-            200.0f, 200.0f, 1.0f, 1.0f, //2
-            100.0f, 200.0f, 0.0f, 1.0f  //3
+           -50.0f, -50.0f, 0.0f, 0.0f, //0
+            50.0f, -50.0f, 1.0f, 0.0f, //1
+            50.0f,  50.0f, 1.0f, 1.0f, //2
+           -50.0f,  50.0f, 0.0f, 1.0f  //3
         };
 
         //Index Buffer- Dont want to redraw points 
@@ -94,12 +95,12 @@ int main(void)
 
         //Create a 4:3 aspect ratio matrix
         glm::mat4 proj = glm::ortho(0.0f, 960.0f, 0.0f, 540.0f, -1.0f, 1.0f);
-        glm::mat4 view = glm::translate(glm::mat4(1.0f) , glm::vec3(-100, 0, 0));
+        glm::mat4 view = glm::translate(glm::mat4(1.0f) , glm::vec3(0, 0, 0));
         
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
         shader.SetUnifrom4f("u_Color", 0.8f, 0.3f, 0.8f, 1.0f);
-
+        
         Texture texture("res/Textures/ComicBoom.png");
         texture.Bind();
         shader.SetUniform1i("u_Texture", 0);
@@ -109,7 +110,7 @@ int main(void)
         shader.UnBind();
         vb.UnBind();
         ib.UnBind();
-
+        
         Renderer renderer;
         
         //Initialaze imgui
@@ -117,7 +118,8 @@ int main(void)
         ImGui_ImplGlfwGL3_Init(window, true);
         ImGui::StyleColorsDark();
 
-        glm::vec3 translation(200, 200, 0);
+        glm::vec3 translationA(200, 200, 0);
+        glm::vec3 translationB(400, 200, 0);
 
         float r = 0.0f;
         float increment = 0.05f;
@@ -129,27 +131,37 @@ int main(void)
             renderer.Clear();
 
             ImGui_ImplGlfwGL3_NewFrame();
+     
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translationA);
+                glm::mat4 mvp = proj * view * model;
+                shader.Bind();
+                shader.SetUniformMat4f("u_MVP", mvp);
 
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), translation);
-            glm::mat4 mvp = proj * view * model;
+                renderer.Draw(va, ib, shader);
+            }
 
-            shader.Bind();
-            shader.SetUnifrom4f("u_Color", r, 0.3f, 0.7f, 1.0f);
-            shader.SetUniformMat4f("u_MVP", mvp);
+            {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), translationB);
+                glm::mat4 mvp = proj * view * model;
+                shader.Bind();
+                shader.SetUniformMat4f("u_MVP", mvp);
+                
+                renderer.Draw(va, ib, shader);
+            }
 
-            va.Bind();
-            ib.Bind();
-            renderer.Draw(va, ib, shader);
-            
             if (r > 1.0f)
                 increment = -0.05f;
             else if (r < 0.0f)
                 increment = 0.05f;
             r += increment;
+
             {
-                ImGui::SliderFloat3("Translate", &translation.x, 0.0f, 960.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+                ImGui::SliderFloat3("Translate A", &translationA.x, 0.0f, 960.0f);
+                ImGui::SliderFloat3("Translate B", &translationB.x, 0.0f, 960.0f);
                 ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             }
+
             ImGui::Render();
             ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
